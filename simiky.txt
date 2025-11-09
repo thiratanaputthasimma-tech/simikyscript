@@ -1,0 +1,61 @@
+lua
+-- Silent Aim Script Example
+local SilentAim = {}
+
+-- Configuration
+SilentAim.Enabled = true
+SilentAim.FOV = 50
+SilentAim.TargetPart = "Head"
+SilentAim.HitChance = 100
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Create FOV Circle
+local circle = Drawing.new("Circle")
+circle.Visible = true
+circle.Radius = SilentAim.FOV
+circle.Color = Color3.fromRGB(255, 255, 255)
+circle.Thickness = 2
+circle.Filled = false
+
+-- Get Closest Player Function
+function getClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local mouse = game:GetService("UserInputService"):GetMouseLocation()
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local character = player.Character
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            
+            if humanoidRootPart then
+                local screenPoint, onScreen = Camera:WorldToViewportPoint(humanoidRootPart.Position)
+                
+                if onScreen then
+                    local distance = (Vector2.new(mouse.X, mouse.Y) - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
+                    
+                    if distance < shortestDistance and distance <= SilentAim.FOV then
+                        shortestDistance = distance
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+-- Update Circle Position
+RunService.RenderStepped:Connect(function()
+    local mouse = game:GetService("UserInputService"):GetMouseLocation()
+    circle.Position = Vector2.new(mouse.X, mouse.Y)
+end)
+
+print("Silent Aim Loaded! FOV: " .. SilentAim.FOV)
+return SilentAim
